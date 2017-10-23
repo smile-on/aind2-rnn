@@ -1,0 +1,16 @@
+# these don't work
+conda env create -n aind2-rnn --file requirements.txt  -c conda-forge
+conda install -c conda-forge --file requirements.txt
+
+# OK
+conda create --name aind2-rnn python=3.6 anaconda
+activate aind2-rnn
+
+# pip install -r requirements.txt
+pip install opencv-python
+pip install tensorflow
+pip install keras
+
+# test
+set KERAS_BACKEND=tensorflow
+python -c "from keras import backend"
