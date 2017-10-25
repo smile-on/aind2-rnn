@@ -70,6 +70,9 @@ def window_transform_series_vertical(series, window_size):
     y = series[window_size: n: step][:, None]
     return X,y
 
+# Note Numpy has standard tool for rooling window slicing np.lib.stride_tricks.as_strided()
+# see https://gist.github.com/codehacken/708f19ae746784cef6e68b037af65788
+
     
 # TODO: build an RNN to perform regression on our time series input/output data
 def build_part1_RNN(window_size):
