@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 
 from keras.models import Sequential
@@ -8,20 +9,19 @@ import keras
 
 # TODO: fill out the function below that transforms the input series 
 # and window-size into a set of input/output pairs for use with our RNN model
-def window_transform_series(series, window_size):
+def window_transform_series(series, window_size, step_size = 1):
     ''' separate array like series into set of sliding window data subsets.
     Horizont sliced implementation.
     ''' 
     a = np.asarray(series)
     n = len(a)
-    step = 1
-    n_strides = int((n-window_size)/step)
+    n_strides = int((n-window_size)/step_size)
     # np slice [start: stop: step]
-    strides = [series[i: i+n-window_size: step][:, None] for i in range(0, window_size, step)]
+    strides = [series[i: i+n-window_size: step_size][:, None] for i in range(0, window_size, step_size)]
     # stacking window_size number of potentialy long strides 
     X = np.hstack(strides)
     # numpy slice [start: stop: step]
-    y = series[window_size: n: step][:, None]
+    y = series[window_size: n: step_size][:, None]
     return X,y
 
 def window_transform_series_index(series, window_size):
@@ -84,19 +84,62 @@ def build_part1_RNN(window_size):
 
 ### TODO: return the text input with only ascii lowercase and the punctuation given below included.
 def cleaned_text(text):
-    punctuation = ['!', ',', '.', ':', ';', '?']
-
+    punctuation = ['!', ',', '.', ':', ';', '?', '\xa0', '©', 'ã']
+    for c in punctuation:
+        text = text.replace(c, ' ')
     return text
 
 ### TODO: fill out the function below that transforms the input text and window-size into a set of input/output pairs for use with our RNN model
-def window_transform_text(text, window_size, step_size):
+def window_transform_text(text: str, window_size: int, step_size: int) -> (List,List):
+    '''
+    transforms the input text into a set of input/output pairs of window-size for use with our RNN model.
+    Note: the return items should be lists - not numpy arrays.
+    :return inputs,outputs: inputs and outputs of RNN data sets as python list.
+    '''
     # containers for input/output pairs
     inputs = []
     outputs = []
-
+    starts = [s for s in range(0, len(text) - window_size, step_size)]
+    for start in starts:
+        end = start + window_size
+        inputs.append(text[start: end])
+        outputs.append(text[end])
     return inputs,outputs
 
 # TODO build the required RNN model: 
 # a single LSTM hidden layer with softmax activation, categorical_crossentropy loss 
-def build_part2_RNN(window_size, num_chars):
-    pass
+def build_part2_RNN(window_size: int, num_chars: int) ->Sequential:
+    model = Sequential()
+    model.add(LSTM(200, input_shape=(window_size, num_chars), 
+                   activation='sigmoid', recurrent_activation='tanh'))
+    model.add(Dense(num_chars, activation='sigmoid'))
+    model.add(Dense(num_chars, activation='softmax'))
+    return model
+
+
+def scale_one(ds, v_min=None, v_max=None):
+    ''' returns dataset scaled to [0..+1]'''
+    if(v_min==None):
+        v_min = np.nanmin(ds)
+    if(v_max==None):
+        v_max = np.nanmax(ds)
+    scale = v_max - v_min
+    return (ds - v_min) / scale
+
+
+def scale_two(ds, v_min=None, v_max=None):
+    ''' returns dataset scaled to [-1..+1]'''
+    return scale_one(ds, v_min, v_max) * 2 -1
+
+
+def descale_two(ds, v_min, v_max):
+    '''reverse scaled fo  scale_two'''
+    ds1 = (ds + 1 ) / 2
+    return descale_one(ds1, v_min, v_max)
+
+
+def descale_one(ds, v_min, v_max):
+    '''reverse scaled fo  scale_one'''
+    scale = v_max - v_min
+    return (ds * scale) + v_min
+
