@@ -1,8 +1,10 @@
 from typing import List
+from io import StringIO
+import string
 import numpy as np
 
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense, Activation
 from keras.layers import LSTM
 import keras
 
@@ -83,9 +85,34 @@ def build_part1_RNN(window_size):
 
 
 ### TODO: return the text input with only ascii lowercase and the punctuation given below included.
-def cleaned_text(text):
-    punctuation = ['!', ',', '.', ':', ';', '?', '\xa0', '©', 'ã']
-    for c in punctuation:
+def cleaned_text(text: str) -> str:
+    '''
+    Removes all non "English letters" characters from text.
+    All ascii lowercase and the punctuation !,.:;? and spaces should be included.
+    :param text: String in ascii codepage. 
+    '''
+    udacity_punctuations = '!,.:;?' # <> string.punctuation
+    udacity_whitespaces = ' ' # <> string.whitespace
+    english_letters = string.ascii_lowercase + udacity_punctuations + udacity_whitespaces
+    clean = None
+    with StringIO(text) as in_txt:
+        with StringIO() as out_txt:
+            # copy text only
+            c = '?'
+            while c:
+                c = in_txt.read(1) # char by char
+                if c in english_letters:
+                    out_txt.write(c)
+            clean = out_txt.getvalue()
+    return clean
+
+# based on template offered by udacity
+def cleaned_text_udacity(text):
+    not_letters = ['!', ',', '.', ':', ';', '?', '(', ')', '{', '}'
+                   , '#', '$', '%', '&', '*', '~', '-', '+', '/', '\\', '@'
+                   , '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+                   , '\xa0', '©', 'ã', 'à', 'â', 'è', 'é']
+    for c in not_letters:
         text = text.replace(c, ' ')
     return text
 
@@ -112,8 +139,8 @@ def build_part2_RNN(window_size: int, num_chars: int) ->Sequential:
     model = Sequential()
     model.add(LSTM(200, input_shape=(window_size, num_chars), 
                    activation='sigmoid', recurrent_activation='tanh'))
-    model.add(Dense(num_chars, activation='sigmoid'))
-    model.add(Dense(num_chars, activation='softmax'))
+    model.add(Dense(num_chars, activation='linear'))
+    model.add(Activation('softmax'))
     return model
 
 
