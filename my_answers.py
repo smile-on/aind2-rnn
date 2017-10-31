@@ -133,13 +133,13 @@ def scale_two(ds, v_min=None, v_max=None):
 
 
 def descale_two(ds, v_min, v_max):
-    '''reverse scaled fo  scale_two'''
+    '''reverse scaling of scale_two'''
     ds1 = (ds + 1 ) / 2
     return descale_one(ds1, v_min, v_max)
 
 
 def descale_one(ds, v_min, v_max):
-    '''reverse scaled fo  scale_one'''
+    '''reverse scaling of scale_one'''
     scale = v_max - v_min
     return (ds * scale) + v_min
 
